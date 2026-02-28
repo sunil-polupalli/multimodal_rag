@@ -1,0 +1,6 @@
+version: 1.0
+setup:
+  - pip install -r requirements.txt
+  - python -c "from src.embeddings.model_loader import EmbeddingModel; EmbeddingModel()" 
+test:
+  - python -m pytest tests/
