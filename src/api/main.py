@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from src.ingestion.document_parser import DocumentParser
 from src.embeddings.model_loader import EmbeddingModel
-from src.vector_store.chroma_manager import ChromaManager
+from src.vector_store.manager import VectorStoreManager
 from src.retrieval.retriever import Retriever
 from src.generation.generator import Generator
 
@@ -16,8 +16,8 @@ app = FastAPI(title="Multimodal RAG API")
 
 parser = DocumentParser()
 embedding_model = EmbeddingModel()
-chroma_manager = ChromaManager()
-retriever = Retriever(chroma_manager, embedding_model)
+vector_store = VectorStoreManager()
+retriever = Retriever(vector_store, embedding_model)
 generator = Generator()
 
 class QueryRequest(BaseModel):
@@ -41,7 +41,7 @@ async def ingest_document(file: UploadFile = File(...)):
             else:
                 embedding = embedding_model.get_image_embedding(item["content"])
             
-            chroma_manager.add_item(embedding, item["content"], item["metadata"], item["type"])
+            vector_store.add_item(embedding, item["content"], item["metadata"], item["type"])
 
         os.remove(file_location)
         return {"message": "Ingestion successful", "items_processed": len(extracted_items)}
