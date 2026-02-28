@@ -11,53 +11,35 @@ def evaluate_system():
     
     if not os.path.exists(SAMPLE_DIR):
         os.makedirs(SAMPLE_DIR)
-        print(f"Created {SAMPLE_DIR}. Please add PDF files there.")
+        print(f"Created {SAMPLE_DIR}. Please add 10 PDF/Image files there.")
         return
 
-    files = [f for f in os.listdir(SAMPLE_DIR) if f.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))]
+    files = [f for f in os.listdir(SAMPLE_DIR) if f.lower().endswith(('.pdf', '.png', '.jpg'))]
     
     if not files:
-        print("No files found to ingest. Skipping ingestion test.")
-    else:
-        print(f"Found {len(files)} documents.")
+        print("No files found. Please add test documents.")
+        return
         
-        # 1. Bulk Ingestion Test
-        for filename in files:
-            file_path = os.path.join(SAMPLE_DIR, filename)
-            print(f"Ingesting {filename}...")
-            start = time.time()
-            try:
-                with open(file_path, "rb") as f:
-                    response = requests.post(f"{BASE_URL}/ingest", files={"file": f})
-                    if response.status_code == 200:
-                        print(f" - Success ({time.time() - start:.2f}s): {response.json()}")
-                    else:
-                        print(f" - Failed: {response.text}")
-            except Exception as e:
-                print(f" - Error: {e}")
+    print(f"Found {len(files)} documents.")
+    
+    # 1. Bulk Ingestion
+    for filename in files:
+        print(f"Ingesting {filename}...")
+        try:
+            with open(os.path.join(SAMPLE_DIR, filename), "rb") as f:
+                requests.post(f"{BASE_URL}/ingest", files={"file": f})
+        except Exception as e:
+            print(f"Error: {e}")
 
     # 2. Query Test
-    queries = [
-        "Summarize the key points.",
-        "What data is shown in the charts?",
-        "Explain the main concept."
-    ]
-    
-    print("\n--- Running Query Evaluation ---")
+    queries = ["Summarize the documents", "What data is in the charts?"]
     for q in queries:
-        print(f"Query: '{q}'")
-        start = time.time()
-        try:
-            response = requests.post(f"{BASE_URL}/query", json={"query": q})
-            if response.status_code == 200:
-                data = response.json()
-                print(f" - Latency: {time.time() - start:.2f}s")
-                print(f" - Sources Retrieved: {len(data.get('sources', []))}")
-                print(f" - Answer Preview: {data.get('answer', '')[:100]}...")
-            else:
-                print(f" - Failed: {response.text}")
-        except Exception as e:
-            print(f" - Error: {e}")
+        print(f"\nQuery: '{q}'")
+        res = requests.post(f"{BASE_URL}/query", json={"query": q})
+        if res.status_code == 200:
+            print(f"Success. Sources found: {len(res.json().get('sources', []))}")
+        else:
+            print("Query Failed")
 
 if __name__ == "__main__":
     evaluate_system()

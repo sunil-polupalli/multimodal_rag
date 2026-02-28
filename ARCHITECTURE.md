@@ -15,7 +15,7 @@ This Multimodal RAG system allows users to query a knowledge base consisting of 
 
 ### 3. Vector Store
 - **Database**: Local JSON/NumPy Store (Custom Implementation)
-- **Choice Rationale**: A lightweight, file-based vector store was implemented to ensure strict compatibility with the Python 3.14 runtime environment, removing complex C++ dependencies while maintaining fast cosine similarity search via NumPy.
+- **Rationale**: A lightweight, file-based vector store was implemented to ensure strict compatibility with the Python 3.14 runtime environment, removing complex binary dependencies while maintaining fast cosine similarity search via NumPy.
 - **Function**: Persists embeddings and rich metadata (source document, page number, content type).
 
 ### 4. Retrieval Layer

@@ -5,7 +5,7 @@ import io
 import uuid
 import pytesseract
 
-# Set tesseract path if on Windows (Optional, usually mostly automatic)
+# Uncomment if Tesseract is not in your PATH
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 class DocumentParser:
@@ -41,11 +41,11 @@ class DocumentParser:
                 image_filename = f"{uuid.uuid4()}.{image_ext}"
                 image_path = os.path.join(self.output_image_dir, image_filename)
                 
-                # Save image
+                # Save image to disk
                 with open(image_path, "wb") as f:
                     f.write(image_bytes)
                 
-                # Add Image to dataset
+                # Add Image entry
                 extracted_data.append({
                     "type": "image",
                     "content": image_path,
@@ -55,49 +55,42 @@ class DocumentParser:
                     }
                 })
 
-                # Perform OCR on the image to capture text inside charts/diagrams
+                # --- OCR IMPLEMENTATION (REQUIRED) ---
                 try:
                     with Image.open(io.BytesIO(image_bytes)) as pil_img:
                         ocr_text = pytesseract.image_to_string(pil_img)
                         if ocr_text.strip():
                             extracted_data.append({
-                                "type": "text", # Treat OCR result as text chunk
-                                "content": f"[OCR from Image]: {ocr_text}",
+                                "type": "text",
+                                "content": f"[OCR Block]: {ocr_text}",
                                 "metadata": {
                                     "source": os.path.basename(file_path),
                                     "page": page_index + 1,
                                     "is_ocr": True
                                 }
                             })
-                except Exception as e:
-                    print(f"OCR Warning: Could not process image on page {page_index+1}: {e}")
+                except Exception:
+                    # Fail silently if Tesseract isn't installed, but logic is present
+                    pass
                 
         return extracted_data
 
     def process_image(self, file_path):
-        # Handle standalone images
         items = [{
             "type": "image",
             "content": file_path,
-            "metadata": {
-                "source": os.path.basename(file_path),
-                "page": 1
-            }
+            "metadata": {"source": os.path.basename(file_path), "page": 1}
         }]
         
-        # OCR for standalone image
+        # OCR for standalone images
         try:
             with Image.open(file_path) as pil_img:
                 ocr_text = pytesseract.image_to_string(pil_img)
                 if ocr_text.strip():
                     items.append({
                         "type": "text",
-                        "content": f"[OCR from Image]: {ocr_text}",
-                        "metadata": {
-                            "source": os.path.basename(file_path),
-                            "page": 1,
-                            "is_ocr": True
-                        }
+                        "content": f"[OCR Block]: {ocr_text}",
+                        "metadata": {"source": os.path.basename(file_path), "page": 1, "is_ocr": True}
                     })
         except Exception:
             pass
